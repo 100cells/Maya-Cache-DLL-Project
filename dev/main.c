@@ -19,23 +19,22 @@ int main()
 	double temp;
 	unsigned long numberOfElements=2;		// 2 particles system
 	float r1,r2,angle1,angle2,delta;
-	int j,fps,simulationLengthSec;
+	int j,totalLength;
 	// initialization
-	setMayaNCacheFileName("2ParticlesExample");
-
-	fps=25;	// frame per second
-	simulationLengthSec=10; // value in second
+	//info=init("test","2ParticlesExample",ONEFILE,25,10);
+	init("test","2ParticlesExample",ONEFILE,POSITIONVELOCITY,25,0,250);
 	r1=5;					
 	r2=7;
 	angle1=0;
 	angle2=90;
-	delta=(float)(360.0/(fps*simulationLengthSec));
-	
-	// initializating the maya ncache file header (one file only)
-	writeMayaNCacheHeader(ONEFILE);	
+	totalLength=info.fps*info.duration;
+
+	delta=(float)(360.0/totalLength);
+		
+	writeMayaNCacheHeader();
 
 	// for the entire simulation's length
-	for(j=0;j<fps*simulationLengthSec;j++)
+	for(j=0;j<totalLength;j++)
 	{
 		id = (double*)malloc(sizeof(double)*numberOfElements);
 		position = (float*)malloc(3*sizeof(float)*numberOfElements);
@@ -52,8 +51,8 @@ int main()
 		// COUNT
 		channels[_COUNT].type = DBLA;
 		channels[_COUNT].numberOfElements = 1;
-		countName=(char*)calloc(sizeof(PTSYS)+7, sizeof(char));
-		strcpy(countName, PTSYS);
+		countName=(char*)calloc(sizeof(info.particleSysName)+7, sizeof(char));
+		strcpy(countName, info.particleSysName);
 		strcat(countName, "_count");
 		channels[_COUNT].name=countName;
 		channels[_COUNT].attribute="count";
@@ -61,8 +60,8 @@ int main()
 		// ID
 		channels[_ID].type = DBLA;
 		channels[_ID].numberOfElements = numberOfElements;
-		idName=(char*)calloc(sizeof(PTSYS)+4, sizeof(char));
-		strcpy(idName, PTSYS);
+		idName=(char*)calloc(sizeof(info.particleSysName)+4, sizeof(char));
+		strcpy(idName, info.particleSysName);
 		strcat(idName, "_id");
 		channels[_ID].name=idName;
 		channels[_ID].attribute="id";
@@ -70,8 +69,8 @@ int main()
 		// POSITION
 		channels[_POSITION].type = FVCA;
 		channels[_POSITION].numberOfElements = numberOfElements;
-		positionName=(char*)calloc(sizeof(PTSYS)+10, sizeof(char));
-		strcpy(positionName, PTSYS);
+		positionName=(char*)calloc(sizeof(info.particleSysName)+10, sizeof(char));
+		strcpy(positionName, info.particleSysName);
 		strcat(positionName, "_position");
 		channels[_POSITION].name=positionName;
 		channels[_POSITION].attribute="position";
@@ -79,8 +78,8 @@ int main()
 		// VELOCITY
 		channels[_VELOCITY].type = FVCA;
 		channels[_VELOCITY].numberOfElements = numberOfElements;
-		velocityName=(char*)calloc(sizeof(PTSYS)+10, sizeof(char));
-		strcpy(velocityName, PTSYS);
+		velocityName=(char*)calloc(sizeof(info.particleSysName)+10, sizeof(char));
+		strcpy(velocityName, info.particleSysName);
 		strcat(velocityName, "_velocity");
 		channels[_VELOCITY].name=velocityName;
 		channels[_VELOCITY].attribute="velocity";
@@ -88,8 +87,8 @@ int main()
 		// BIRTHTHIME
 		channels[_BIRTHTIME].type = DBLA;
 		channels[_BIRTHTIME].numberOfElements = numberOfElements;
-		birthTimeName=(char*)calloc(sizeof(PTSYS)+11, sizeof(char));
-		strcpy(birthTimeName, PTSYS);
+		birthTimeName=(char*)calloc(sizeof(info.particleSysName)+11, sizeof(char));
+		strcpy(birthTimeName, info.particleSysName);
 		strcat(birthTimeName, "_birthTime");
 		channels[_BIRTHTIME].name=birthTimeName;
 		channels[_BIRTHTIME].attribute="birthTime";
@@ -97,8 +96,8 @@ int main()
 		// LIFESPANPP
 		channels[_LIFESPANPP].type = DBLA;
 		channels[_LIFESPANPP].numberOfElements = numberOfElements;
-		lifespanPPName=(char*)calloc(sizeof(PTSYS)+12, sizeof(char));
-		strcpy(lifespanPPName, PTSYS);
+		lifespanPPName=(char*)calloc(sizeof(info.particleSysName)+12, sizeof(char));
+		strcpy(lifespanPPName, info.particleSysName);
 		strcat(lifespanPPName, "_lifespanPP");
 		channels[_LIFESPANPP].name=lifespanPPName;
 		channels[_LIFESPANPP].attribute="lifespanPP";
@@ -106,8 +105,8 @@ int main()
 		// FINALLIFESPANPP
 		channels[_FINALLIFESPANPP].type = DBLA;
 		channels[_FINALLIFESPANPP].numberOfElements = numberOfElements;
-		finalLifespanPPName=(char*)calloc(sizeof(PTSYS)+17, sizeof(char));
-		strcpy(finalLifespanPPName, PTSYS);
+		finalLifespanPPName=(char*)calloc(sizeof(info.particleSysName)+17, sizeof(char));
+		strcpy(finalLifespanPPName, info.particleSysName);
 		strcat(finalLifespanPPName, "_finalLifespanPP");
 		channels[_FINALLIFESPANPP].name=finalLifespanPPName;
 		channels[_FINALLIFESPANPP].attribute="finalLifespanPP";
@@ -129,8 +128,9 @@ int main()
 
 		angle1+=delta;
 		angle2-=delta;
+
 		// i don't need to compute the birthtime because the particles are already presents at time 0
-		// and the "calloc" fill the memory area with zeros. Same append to lifespanPP and finalLifeSpanPP and velocity
+		// and the "calloc" fill the memory area with zeros. Same appends to lifespanPP, finalLifeSpanPP and velocity
 
 		channels[_COUNT].elements = count;
 		channels[_ID].elements = id;
@@ -140,12 +140,11 @@ int main()
 		channels[_LIFESPANPP].elements = lifespanPP;
 		channels[_FINALLIFESPANPP].elements = finalLifespanPP;
 		
-		writeMayaNCacheBlock(j+1, fps,channels,POSITIONVELOCITY);
+		// the first frame is the #1, NOT #0
+		writeMayaNCacheBlock(j+1, channels);
 		if(j==0)
 		{
-			// writing the xml description file
-			printXmlHeader(6000/fps, fps*simulationLengthSec*6000/fps, 6000/fps,"none","maya 2011 x64","me",PTSYS, "2ParticlesExample");
-			writeXmlChannel(channels,6000/fps, fps*simulationLengthSec*6000/fps,6000/fps,POSITIONVELOCITY);
+			printXml(channels,"none","maya 2011 x64","me");
 			closeXmlFile();
 		}
 		
@@ -158,9 +157,8 @@ int main()
 		
 	}
 
-	// closing the maya ncache file
+	// closing the maya ncache file and exit
 	closeMayaNCacheFile();
 	getchar();
-
 	return 0;
 }

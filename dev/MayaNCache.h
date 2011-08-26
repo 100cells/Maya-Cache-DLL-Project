@@ -21,11 +21,12 @@
 		return a;									\
 	}	
 
-//#define PTSYS	"BoidPtShape"
-#define CACHETYPE int 
+//#define info.particleSysName	"BoidPtShape"
+#define CACHEOPTION int 
 #define ALLCHANNEL 0		// not used 
 #define POSITION 6			// id,count,birthTime,position,lifespanPP,finalLifespanPP
 #define POSITIONVELOCITY 7	// id,count,birthTime,position,lifespanPP,finalLifespanPP,velocity
+// open to futures implementations 
 
 // channel type 
 #define CHANNELTYPE int
@@ -46,9 +47,6 @@
 #define FINALLIFESPANPPCHANNEL "finalLifespanPP"
 #define VELOCITYCHANNEL "velocity"
 
-// suffix
-#define PTSYS	"nParticleShape1"
-
 // variable type
 #define FVCA 0
 #define DBLA 1
@@ -59,8 +57,28 @@
 #define ONEFILEPERFRAME 1
 
 // default value
+#define MAYATICK 6000
 #define BUFFERLENGTH 65536
 #define FOUR 0x04000000
+
+typedef  struct Info
+{
+	 char *particleSysName;
+	 char *mcFileName;
+	 char *xmlFileName;
+	 CACHETYPE cacheType;
+	 CACHEOPTION option;
+	 unsigned int fps;
+	 unsigned int duration;
+	 int start;				// [tick]
+	 int end;				// [tick]
+	 unsigned int mayaFPS;	// [seconds]
+	 FILE * mayaMCFile;
+	 FILE * mayaXMLFile;
+     char mcChannelBuffer[BUFFERLENGTH];
+	 char xmlChannelBuffer[BUFFERLENGTH];
+}Info;
+
 
 typedef struct Channel
 {
@@ -69,8 +87,7 @@ typedef struct Channel
 	int type;
 	int numberOfElements;
 	void *elements;			// DBLA elements: double array; FVCA elements: float triples' array  
-}
-Channel;
+}Channel;
 
 typedef struct Header
 {
@@ -87,14 +104,19 @@ typedef struct Header
     unsigned int etimSecondPart;
 } Header;
 
-static FILE * mayaNCacheFile;
-static char channelBuffer[BUFFERLENGTH];
-static char * mayaNcacheFileName;
+Info info;
 
-void setMayaNCacheFileName(char * fileName);
-void closeMayaNCacheFile();
-void writeMayaNCacheHeader(CACHETYPE type);
-void writeMayaNCacheBlock(int frame, int fps, Channel *channels, CACHETYPE typeCache);
+// particleSysName [MAYA particle system name], fileName [file name, without extension], cacheType [ONEFILE/ONEFILEPERFRAME], option [POSITION/POSITIONVELOCITY/ALLCHANNEL], fps [frame per second,example 25/30], start [frame], end [frame]
+void init(char *particleSysName,char *fileName, CACHETYPE cacheType, CACHEOPTION option, unsigned int fps, int start, int end);
+
+void writeMayaNCacheHeader();
+
+// frame [actual frame], channels [array of channels]
+void writeMayaNCacheBlock(int frame, Channel *channels);
+
+//channels [array of channels]
 void writeMayaNCacheChannel(Channel * channel);
+
+void closeMayaNCacheFile();
 
 #endif // MAYANCACHE_H_INCLUDED

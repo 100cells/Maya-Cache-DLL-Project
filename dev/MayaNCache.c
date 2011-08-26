@@ -4,44 +4,61 @@
  GENERICSWAP(float,unsigned int)			// swap for float variables
  GENERICSWAP(int,unsigned int)				// swap for int variables
 
-
-void setMayaNCacheFileName(char *fileName) 
-{
+ void init(char *particleSysName,char *fileName, CACHETYPE cacheType, CACHEOPTION option, unsigned int fps, int start, int end)
+ {
+	char *mcName, *xmlName;
+	
 	// adding extension ".mc"
-	char *name;
-	name = (char*)malloc(sizeof(char)*(strlen(fileName)+4));
-	strcpy(name, fileName);
-	strcat(name, ".mc");
-	mayaNCacheFile = fopen(name, "wb");
-	mayaNcacheFileName = name;
-	setvbuf(mayaNCacheFile, channelBuffer, _IOFBF, BUFFERLENGTH);
-	printf("File's name is: %s\n", mayaNcacheFileName);
-}
+	mcName = (char*)malloc(sizeof(char)*(strlen(fileName)+4));
+	strcpy(mcName, fileName);
+	strcat(mcName, ".mc");
+	info.mcFileName=mcName;
+	info.mayaMCFile=fopen(mcName, "wb");
+	setvbuf(info.mayaMCFile, info.mcChannelBuffer, _IOFBF, BUFFERLENGTH);
+
+	// adding extension ".xml"
+	xmlName = (char*)malloc(sizeof(char)*(strlen(fileName)+5));
+	strcpy(xmlName, fileName);
+	strcat(xmlName, ".xml");
+	info.xmlFileName=xmlName;
+	info.mayaXMLFile=fopen(xmlName, "wb");
+	setvbuf(info.mayaXMLFile, info.xmlChannelBuffer, _IOFBF, BUFFERLENGTH);
+
+	if(cacheType!=ONEFILE)
+		printf("Option is not yet supported. Next revision will support the multi file option\nCache will be saved in a single file\n");
+		info.cacheType=ONEFILE;
+
+	info.option=option;
+	info.fps=fps;
+	info.start=MAYATICK/fps*start;			
+	info.end=MAYATICK/fps*end;				
+	info.duration=(end-start)/fps;
+	info.mayaFPS=MAYATICK/fps;
+	info.particleSysName=particleSysName;
+ }
 
 
 void closeMayaNCacheFile()
 {
-    if(mayaNCacheFile!=NULL)
+    if(info.mayaMCFile!=NULL)
 	{
-		printf("File '%s' was successfully closed and saved\n", mayaNcacheFileName);
-        fclose(mayaNCacheFile);
+		printf("File '%s' was successfully closed and saved\n", info.mcFileName);
+        fclose(info.mayaMCFile);
 	}
 	else
-		printf("Maya NCache file '%s' not saved!\n", mayaNcacheFileName);
+		printf("Maya NCache file '%s' not saved!\n", info.mcFileName);
 }
 
 
-void writeMayaNCacheHeader( CACHETYPE type) 
+void writeMayaNCacheHeader() 
 {
 	Header header;
 	int startTime,endTime;
 	startTime=0;
 	endTime=1;
-	
 
 	// TO DO!!
 	// generalize the header function for "one file per frame" and "one file"
-
     
     memcpy(header.format, "FOR4", sizeof(header.format));
     header.length = swapint(40);
@@ -54,10 +71,10 @@ void writeMayaNCacheHeader( CACHETYPE type)
     memcpy(header.etim, "ETIM", sizeof(header.etim));
     header.etimFirstPart = swapint(4);
     header.etimSecondPart = swapint(endTime);
-	fwrite(&header, sizeof(header), 1, mayaNCacheFile);
+	fwrite(&header, sizeof(header), 1, info.mayaMCFile);
 }
 
-void writeMayaNCacheBlock(int frame, int fps, Channel *channels, CACHETYPE typeCache)
+void writeMayaNCacheBlock(int frame,  Channel *channels)
 {
 	// funzione per la scrittura di un blocco dati relativo ad ogni BLOCCO "Block"
 	// ogni Block inizia con "FOR4"
@@ -68,11 +85,11 @@ void writeMayaNCacheBlock(int frame, int fps, Channel *channels, CACHETYPE typeC
 	unsigned int time, dimB, timeVar, nChannels=0, dataLength=0, dataSize=0;
 	int padding,i;
 	timeVar = swapint(4);
-	time = swapint(frame*6000/fps);
-	fwrite("FOR4", 4*sizeof(char), 1, mayaNCacheFile);
+	time = swapint(frame*MAYATICK/info.fps);
+	fwrite("FOR4", 4*sizeof(char), 1, info.mayaMCFile);
 
 	// il campo seguente è la dimensione del blocco totale espresso in esadecimale (4 byte)
-	for(i=0;i<typeCache;i++)
+	for(i=0;i<info.option;i++)
 	{
 		int size=0;
 		dataSize = 0;
@@ -86,19 +103,18 @@ void writeMayaNCacheBlock(int frame, int fps, Channel *channels, CACHETYPE typeC
 		dataLength += dataSize;
 	}
 
-	dimB = 16 + 28 * typeCache + dataLength;
+	dimB = 16 + 28 * info.option + dataLength;
 	dimB = swapint(dimB);
-	fwrite(&dimB, sizeof(unsigned int), 1, mayaNCacheFile);
-	fwrite("MYCH", 4*sizeof(char), 1, mayaNCacheFile);
-	fwrite("TIME", 4*sizeof(char), 1, mayaNCacheFile);
+	fwrite(&dimB, sizeof(unsigned int), 1, info.mayaMCFile);
+	fwrite("MYCH", 4*sizeof(char), 1, info.mayaMCFile);
+	fwrite("TIME", 4*sizeof(char), 1, info.mayaMCFile);
 	// dimensione in byte della variabile "time" (4 byte)
-	fwrite(&timeVar, sizeof(int), 1, mayaNCacheFile);
-	fwrite(&time, sizeof(int), 1, mayaNCacheFile);
+	fwrite(&timeVar, sizeof(int), 1, info.mayaMCFile);
+	fwrite(&time, sizeof(int), 1, info.mayaMCFile);
 
-	for(i=0;i<typeCache;i++)
+	for(i=0;i<info.option;i++)
 		writeMayaNCacheChannel(&channels[i]);
 }
-
 
 void writeMayaNCacheChannel(Channel * channel)
 {
@@ -137,15 +153,15 @@ void writeMayaNCacheChannel(Channel * channel)
 	channelArrayLength = swapint(channelArrayLength);
 	nElements = swapint(channel->numberOfElements);
 
-	fwrite("CHNM", 4*sizeof(char), 1, mayaNCacheFile);
-	fwrite(&swappedDim, sizeof(int), 1, mayaNCacheFile);
-	fwrite(channel->name, dim, 1, mayaNCacheFile);
-	fwrite(paddingString, padding, 1, mayaNCacheFile);
-	fwrite("SIZE", 4*sizeof(char), 1, mayaNCacheFile);
-	fwrite(&four, sizeof(int), 1, mayaNCacheFile);
-	fwrite(&size, sizeof(int), 1, mayaNCacheFile);
-	fwrite(type, 4*sizeof(char), 1, mayaNCacheFile);
-	fwrite(&channelArrayLength, sizeof(int), 1, mayaNCacheFile);
+	fwrite("CHNM", 4*sizeof(char), 1, info.mayaMCFile);
+	fwrite(&swappedDim, sizeof(int), 1, info.mayaMCFile);
+	fwrite(channel->name, dim, 1, info.mayaMCFile);
+	fwrite(paddingString, padding, 1, info.mayaMCFile);
+	fwrite("SIZE", 4*sizeof(char), 1, info.mayaMCFile);
+	fwrite(&four, sizeof(int), 1, info.mayaMCFile);
+	fwrite(&size, sizeof(int), 1, info.mayaMCFile);
+	fwrite(type, 4*sizeof(char), 1, info.mayaMCFile);
+	fwrite(&channelArrayLength, sizeof(int), 1, info.mayaMCFile);
 	
 	//writing elements
 	for(i=0; i<arrayElements; i++)
@@ -154,12 +170,12 @@ void writeMayaNCacheChannel(Channel * channel)
 		if(channel->type==FVCA)
 		{
 			temp=swapfloat(pFloat[i]);
-			fwrite(&temp, sizeof(int), 1, mayaNCacheFile);
+			fwrite(&temp, sizeof(int), 1, info.mayaMCFile);
 		}
 		else
 		{
 			tempLong = swapdouble(pDouble[i]);
-			fwrite(&tempLong, sizeof(long long int), 1, mayaNCacheFile);
+			fwrite(&tempLong, sizeof(long long int), 1, info.mayaMCFile);
 		}
 	}
 }

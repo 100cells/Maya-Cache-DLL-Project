@@ -4,16 +4,12 @@
 #include <stdio.h>
 #include "MayaNCache.h"
 
-static FILE *file;
-	
-void printXmlHeader(
-		int in, int out, int timePerFrame,
-		char* sceneFile, char* mayaVersion, 
-		char* userName, char* particleShapeName, char* fileName
-		);
+//channels [array of channels], sceneFile[], mayaVersion[], userName[]
+void printXml(Channel *channel,char* sceneFile, char* mayaVersion, char* userName);
+
+//channels [array of channels]
+void writeXmlChannel(Channel *channel);
 
 void closeXmlFile();
-
-void writeXmlChannel(Channel *channel,int in, int out,int fps, CACHETYPE type);
 
 #endif
