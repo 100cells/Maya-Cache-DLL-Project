@@ -15,35 +15,39 @@ int main()
 	Channel *channels;
 	double  *id, *birthtime,*lifespanPP,*finalLifespanPP;
 	float *position,*velocity;
-	double count;
+	double count,start,end;
 	unsigned long numberOfElements=2;		// 2 particles system
 	float r1,r2,angle1,angle2,delta;
 	int j,totalLength;
-	// initialization
-	init("test","c://temp//2ParticlesExample",ONEFILE,POSITIONVELOCITY,25,0,250);
+	unsigned int fps;
+
+	fps=24;
+	start=5;		// start at time "0"
+	end=15;	// simulation lenght "10" (in seconds) 
 	r1=5;					
 	r2=7;
 	angle1=0;
 	angle2=90;
-	totalLength=info.fps*info.duration;
-
-	delta=(float)(360.0/totalLength);
-		
+	
+	// initialization
+	init("test","d://temp//2ParticlesExample",ONEFILE,POSITIONVELOCITY,fps,start,end);
 	writeMayaNCacheHeader();
 
+	totalLength=(int)(info.fps*info.duration);
+	delta=(float)(360.0/totalLength);
+
+	channels=(Channel*)malloc(sizeof(Channel)*POSITIONVELOCITY);
 	// for the entire simulation's length
 	for(j=0;j<totalLength;j++)
 	{
+		count = (double)numberOfElements;
 		id = (double*)malloc(sizeof(double)*numberOfElements);
 		position = (float*)malloc(3*sizeof(float)*numberOfElements);
-		velocity = (float*)calloc(3*numberOfElements,sizeof(float));
+		velocity = (float*)malloc(3*sizeof(float)*numberOfElements);
 		birthtime = (double*)calloc(numberOfElements, sizeof(double));
 		lifespanPP = (double*)calloc(numberOfElements, sizeof(double));
 		finalLifespanPP = (double*)calloc(numberOfElements, sizeof(double));
-		channels=(Channel*)malloc(sizeof(Channel)*POSITIONVELOCITY);
-		count = (double)numberOfElements;
 		
-
 		// initializating cache channels
 
 		// COUNT
@@ -91,7 +95,7 @@ int main()
 		// for each particle in the particle system 
 		// compute the position and save the datas
 		
-		// position and id for the first particle (x axis)
+		// position, velocity and id for the first particle (x axis)
 		id[0]=10;
 		position[0]=0;
 		position[1]=(float)(r1*sin(3.14*angle1/180.0));
@@ -101,12 +105,11 @@ int main()
 		velocity[2]=(float)(-r1*3.14/180.0*sin(3.14*angle1/180.0));
 		
 		
-		// position and id for the second particle (y axis)
+		// position, velocity and id for the second particle (y axis)
 		id[1]=100;
 		position[3]=(float)(r2*sin(3.14*angle2/180.0));
 		position[4]=0;
 		position[5]=(float)(r2*cos(3.14*angle2/180.0));
-
 		velocity[3]=(float)(r2*3.14/180.0*cos(3.14*angle2/180.0));
 		velocity[4]=0;
 		velocity[5]=(float)(-r2*3.14/180.0*sin(3.14*angle2/180.0));
@@ -127,11 +130,7 @@ int main()
 		
 		// the first frame is the #1, NOT #0
 		writeMayaNCacheBlock(j+1, channels);
-		if(j==0)
-		{
-			printXml(channels,"none","maya 2011 x64","me");
-			closeXmlFile();
-		}
+		//writeMayaNCacheBlock(j+1+(int)(start*fps), channels);
 
 		if(id!=NULL)
 			free(id);
@@ -145,10 +144,10 @@ int main()
 			free(lifespanPP);
 		if(finalLifespanPP!=NULL)
 			free(finalLifespanPP);
-		if(channels!=NULL)
-			free(channels);
-		
 	}
+
+	if(channels!=NULL)
+		free(channels);
 
 	// closing the maya ncache file and exit
 	closeMayaNCacheFile();

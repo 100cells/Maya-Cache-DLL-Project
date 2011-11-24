@@ -1,12 +1,15 @@
 #include "MayaNCache.h"
+#include "XmlWriter.h"
 
  GENERICSWAP(double,unsigned long long)		// swap for double variables
  GENERICSWAP(float,unsigned int)			// swap for float variables
  GENERICSWAP(int,unsigned int)				// swap for int variables
 
+  //utility functions
  void makeName(CHANNELTYPE type);
+ BOOL fileExists(const char * filename);
 
- void init(char *particleSysName,char *fileName, CACHEFORMAT cacheFormat, CACHEOPTION option, unsigned int fps, int start, int end)
+ void init(char *particleSysName,char *fileName, CACHEFORMAT cacheFormat, CACHEOPTION option, unsigned int fps, double start, double end)
  {
 	char *mcName, *xmlName;
 	int i=0;
@@ -41,17 +44,23 @@
 	info.cacheFormat=ONEFILE;
 
 	info.option=option;
-	info.fps=fps;
-	info.start=MAYATICK/fps*start;			
-	info.end=MAYATICK/fps*end;				
-	info.duration=(end-start)/fps;
-	info.mayaFPS=MAYATICK/fps;
+	info.fps=fps;									// [frame/sec]
+	info.start=(int)floor((start*MAYATICK)/fps);	// [mayaticks]
+	info.end=(int)floor(MAYATICK*end);				// [mayaticks]
+	info.duration=end-start;						// [sec]
+	info.mayaFPS=MAYATICK/fps;						// [mayaticksfps]
 	info.particleSysName=particleSysName;
+
+	// computing the gap between starting simulation and starting animation
+	// the 2 values couldn't be the same
+	delta=(int)(start*info.fps);			
 
 	cName.names=(char **)malloc(option*sizeof(char *));
 	aName.names=(char **)malloc(option*sizeof(char *));
 	for(i=0;i<option;i++)
 		makeName(i);
+
+	isXmlFinalized=FALSE;
  }
 
 
@@ -67,6 +76,8 @@ void closeMayaNCacheFile()
 	}
 	else
 		printf("Maya NCache file '%s' not saved!\n", info.mcFileName);
+
+	closeXmlFile();
 }
 
 
@@ -107,6 +118,7 @@ void writeMayaNCacheBlock(int frame,  Channel *channels)
 	unsigned int time, dimB, timeVar, nChannels=0, dataLength=0, dataSize=0;
 	int padding,i;
 	timeVar = swapint(4);
+	frame+=delta;
 	time = swapint(frame*MAYATICK/info.fps);
 	fwrite(FOR4, 4*sizeof(char), 1, info.mayaMCFile);
 
@@ -139,6 +151,11 @@ void writeMayaNCacheBlock(int frame,  Channel *channels)
 		writeMayaNCacheChannel(&channels[i]);
 
 	fflush(info.mayaMCFile);
+	if(isXmlFinalized==FALSE)
+	{
+		printXml(channels,"none","maya 2011 x64","me");
+		isXmlFinalized=TRUE;
+	}
 }
 
 void writeMayaNCacheChannel(Channel * channel)
@@ -156,6 +173,8 @@ void writeMayaNCacheChannel(Channel * channel)
 	four = swapint(4);
 	size = swapint(channel->numberOfElements);
 	paddingString = (char*)calloc(padding, sizeof(char));
+	
+	//pDouble = (double *)channel->elements;
 	if(channel->type==FVCA)
 	{
 		pFloat = (float *)channel->elements;
@@ -185,18 +204,21 @@ void writeMayaNCacheChannel(Channel * channel)
 	fwrite(&size, sizeof(int), 1, info.mayaMCFile);
 	fwrite(type, 4*sizeof(char), 1, info.mayaMCFile);
 	fwrite(&channelArrayLength, sizeof(int), 1, info.mayaMCFile);
-	
+		
 	//writing elements
 	for(i=0; i<arrayElements; i++)
 	{
 		//swap type + write
 		if(channel->type==FVCA)
 		{
+			//temp=swapfloat((float)pDouble[i]);	
 			temp=swapfloat(pFloat[i]);
 			fwrite(&temp, sizeof(int), 1, info.mayaMCFile);
 		}
 		else
 		{
+			/*double d;
+			d=pDouble[i];*/
 			tempLong = swapdouble(pDouble[i]);
 			fwrite(&tempLong, sizeof(long long int), 1, info.mayaMCFile);
 		}
@@ -239,4 +261,29 @@ void makeName(CHANNELTYPE type)
 	strcpy(cName.names[type], info.particleSysName);
 	strcat(cName.names[type], channelsName[type]);
 	strcpy(aName.names[type], attributesName[type]);
+}
+
+
+BOOL fileExists(const char * filename)
+{
+	FILE * file;
+	if ( file= fopen(filename, "r"))
+	{
+		fclose(file);
+		return TRUE;
+	}
+	return FALSE;
+}
+
+void deleteFile()
+{
+	// chiudo gli stream dei file nel caso fossero aperti	
+	closeMayaNCacheFile();
+
+	// cancello i file
+	if(fileExists(info.mcFileName))
+		remove(info.mcFileName);
+
+	if(fileExists(info.xmlFileName))
+		remove(info.xmlFileName);
 }

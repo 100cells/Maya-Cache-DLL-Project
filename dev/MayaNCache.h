@@ -4,8 +4,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
-// generic swap macro "endianess"
+#include "..\MayaBoids\Definition.h"
+
+// generic swap macro managing "endianess"
 #define GENERICSWAP(type,returnType)				\
 	returnType  swap##type(type d)					\
 	{												\
@@ -21,13 +24,13 @@
 		return a;									\
 	}	
 
-//#define info.particleSysName	"BoidPtShape"
-#define CACHEOPTION int 
-#define ALLCHANNEL 16					// not used 
-#define POSITION 6						// id,count,birthTime,position,lifespanPP,finalLifespanPP
-#define POSITIONVELOCITY 7				// id,count,birthTime,position,lifespanPP,finalLifespanPP,velocity
-#define POSITIONVELOCITYACCELERATION 8	// id,count,birthTime,position,lifespanPP,finalLifespanPP,velocity,acceleration
-// open to futures implementations 
+////#define info.particleSysName	"BoidPtShape"
+//#define CACHEOPTION int 
+//#define ALLCHANNEL 16					// not used 
+//#define POSITION 6						// id,count,birthTime,position,lifespanPP,finalLifespanPP
+//#define POSITIONVELOCITY 7				// id,count,birthTime,position,lifespanPP,finalLifespanPP,velocity
+//#define POSITIONVELOCITYACCELERATION 8	// id,count,birthTime,position,lifespanPP,finalLifespanPP,velocity,acceleration
+//// open to futures implementations 
 
 // channel type 
 #define CHANNELTYPE int
@@ -89,9 +92,9 @@
 #define DBLA 1
 
 // cache format type
-#define CACHEFORMAT int
-#define ONEFILE 0
-#define ONEFILEPERFRAME 1
+//#define CACHEFORMAT int
+//#define ONEFILE 0
+//#define ONEFILEPERFRAME 1
 
 // default value
 #define MAYATICK 6000
@@ -111,7 +114,7 @@ typedef  struct Info
 	 CACHEFORMAT cacheFormat;
 	 CACHEOPTION option;
 	 unsigned int fps;
-	 unsigned int duration;
+	 double duration;
 	 int start;				// [tick]
 	 int end;				// [tick]
 	 unsigned int mayaFPS;	// [seconds]
@@ -122,14 +125,14 @@ typedef  struct Info
 }Info;
 
 
-typedef struct Channel
-{
-	char *name;
-	char *attribute;
-	int type;
-	int numberOfElements;
-	void *elements;			// DBLA elements: double array; FVCA elements: float triples' array  
-}Channel;
+//typedef struct Channel
+//{
+//	char *name;
+//	char *attribute;
+//	int type;
+//	int numberOfElements;
+//	void *elements;			// DBLA elements: double array; FVCA elements: float triples' array  
+//}Channel;
 
 typedef struct Header
 {
@@ -149,17 +152,27 @@ typedef struct Header
 ChannelName cName;
 ChannelName aName;
 Info info;
-static char *channelsName[]={"_id","_count","_birthTime","_position","_lifespannPP","_finalLifespanPP"
+
+static const char *channelsName[]={"_id","_count","_birthTime","_position","_lifespannPP","_finalLifespanPP"
 							,"_velocity","_acceleration","_worldPosition","_worldVelocity","_worldVelocityInObjectSpace"
 							,"_mass","_age","_rgbPP","_opacityPP","_radiusPP"};
 
-static char *attributesName[]={"id","count","birthTime","position","lifespannPP","finalLifespanPP"
+static const char *attributesName[]={"id","count","birthTime","position","lifespannPP","finalLifespanPP"
 							,"velocity","acceleration","worldPosition","worldVelocity","worldVelocityInObjectSpace"
 							,"mass","age","rgbPP","opacityPP","radiusPP"};
 
+static int delta;
 
-// particleSysName [MAYA particle system name], fileName [file name, without extension], cacheType [ONEFILE/ONEFILEPERFRAME], option [POSITION/POSITIONVELOCITY/ALLCHANNEL], fps [frame per second,example 25/30], start [frame], end [frame]
-void init(char *particleSysName,char *fileName, CACHEFORMAT cacheFormat, CACHEOPTION option, unsigned int fps, int start, int end);
+/* 
+	particleSysName [MAYA particle system name]
+	fileName [file name, without extension] 
+	cacheType [ONEFILE/ONEFILEPERFRAME] 
+	option [POSITION/POSITIONVELOCITY/ALLCHANNEL] 
+	fps [frame per second,example 25/30]
+	start [frame] 
+	end [frame]
+*/
+void init(char *particleSysName,char *fileName, CACHEFORMAT cacheFormat, CACHEOPTION option, unsigned int fps, double start, double end);
 
 void writeMayaNCacheHeader();
 
@@ -170,5 +183,7 @@ void writeMayaNCacheBlock(int frame, Channel *channels);
 void writeMayaNCacheChannel(Channel * channel);
 
 void closeMayaNCacheFile();
+
+void deleteFile();
 
 #endif // MAYANCACHE_H_INCLUDED

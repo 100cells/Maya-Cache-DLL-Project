@@ -9,7 +9,7 @@ void printXml(Channel *channel,char* sceneFile, char* mayaVersion, char* userNam
 		fprintf(info.mayaXMLFile,"\t<time Range=\"%d-%d\"/>\n\t<cacheTimePerFrame TimePerFrame=\"%d\"/>\n", info.start, info.end, info.mayaFPS);
 		fprintf(info.mayaXMLFile,"\t<cacheVersion Version=\"2.0\"/>\n");
 		fprintf(info.mayaXMLFile,"\t<extra>%s</extra>\n\t<extra>%s</extra>\n\t<extra>%s</extra>\n", sceneFile, mayaVersion, userName);
-		fprintf(info.mayaXMLFile,"\t<extra>NCloth Info for %s:</extra>\n", info.particleSysName);
+		fprintf(info.mayaXMLFile,"\t<extra>NParticles Info for %s:</extra>\n", info.particleSysName);
 		fprintf(info.mayaXMLFile,"\t<Channels>\n");
 		writeXmlChannel(channel);
 	}
@@ -44,4 +44,5 @@ void closeXmlFile()
         fprintf(info.mayaXMLFile,"\t</Channels>\n</Autodesk_Cache_File>\n");
         fclose(info.mayaXMLFile);
 	}
+	isXmlFinalized=FALSE;
 }
