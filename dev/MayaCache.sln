@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MayaCache", "MayaCache\MayaCache.vcxproj", "{1AD3C8DD-BB83-41AC-846D-9F4D8F0CB414}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestDLL", "TestDLL\TestDLL.vcxproj", "{5BBDD4B1-38D4-4A10-AB5D-750F485D1E74}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Debug|x64 = Debug|x64
+		Release|Win32 = Release|Win32
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1AD3C8DD-BB83-41AC-846D-9F4D8F0CB414}.Debug|Win32.ActiveCfg = Debug|Win32
+		{1AD3C8DD-BB83-41AC-846D-9F4D8F0CB414}.Debug|Win32.Build.0 = Debug|Win32
+		{1AD3C8DD-BB83-41AC-846D-9F4D8F0CB414}.Debug|x64.ActiveCfg = Debug|x64
+		{1AD3C8DD-BB83-41AC-846D-9F4D8F0CB414}.Debug|x64.Build.0 = Debug|x64
+		{1AD3C8DD-BB83-41AC-846D-9F4D8F0CB414}.Release|Win32.ActiveCfg = Release|Win32
+		{1AD3C8DD-BB83-41AC-846D-9F4D8F0CB414}.Release|Win32.Build.0 = Release|Win32
+		{1AD3C8DD-BB83-41AC-846D-9F4D8F0CB414}.Release|x64.ActiveCfg = Release|x64
+		{1AD3C8DD-BB83-41AC-846D-9F4D8F0CB414}.Release|x64.Build.0 = Release|x64
+		{5BBDD4B1-38D4-4A10-AB5D-750F485D1E74}.Debug|Win32.ActiveCfg = Debug|Win32
+		{5BBDD4B1-38D4-4A10-AB5D-750F485D1E74}.Debug|Win32.Build.0 = Debug|Win32
+		{5BBDD4B1-38D4-4A10-AB5D-750F485D1E74}.Debug|x64.ActiveCfg = Debug|Win32
+		{5BBDD4B1-38D4-4A10-AB5D-750F485D1E74}.Release|Win32.ActiveCfg = Release|Win32
+		{5BBDD4B1-38D4-4A10-AB5D-750F485D1E74}.Release|Win32.Build.0 = Release|Win32
+		{5BBDD4B1-38D4-4A10-AB5D-750F485D1E74}.Release|x64.ActiveCfg = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

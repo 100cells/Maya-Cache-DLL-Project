@@ -4,14 +4,10 @@
 #include <stdio.h>
 #include "MayaNCache.h"
 
-
 BOOL isXmlFinalized;
 
+void printXml(Channel *channel);
 
-//channels [array of channels], sceneFile[], mayaVersion[], userName[]
-void printXml(Channel *channel,char* sceneFile, char* mayaVersion, char* userName);
-
-//channels [array of channels]
 void writeXmlChannel(Channel *channel);
 
 void closeXmlFile();
