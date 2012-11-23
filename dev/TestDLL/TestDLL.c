@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include "../MayaCache/MayaNCache.h"
+#include <MayaNCache.h>
 
 
 //example: how to use the MayaNCache library

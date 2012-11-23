@@ -1,0 +1,9 @@
+dev/Output/
+dev/ipch/
+dev/Intermediate/
+dev/TestDLL/Debug/
+dev/TestDLL/TestDLL.vcxproj.user
+dev/MayaCache/MayaCache.vcxproj.user
+dev/MayaCache.sdf
+dev/MayaCache.suo
+dev/MayaCache.opensdf
