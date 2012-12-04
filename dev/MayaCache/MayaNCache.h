@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include "..\Other Include\Boolean.h"
+#include <Boolean.h>
 
 
 // generic swap macro managing "endianess"
