@@ -35,11 +35,11 @@ void writeXmlChannel(Channel *channel)
 {
 	char *channelType;
 	int i,number = 0;
-	int j=0;
-    if(info.mayaXMLFile!=NULL)
-		for(i=0;i<CACHENUMBEROFCHANNELS;i++)
+	int j = 0;
+    if(info.mayaXMLFile != NULL)
+		for(i = 0; i < CACHENUMBEROFCHANNELS; i++)
 		{
-			if(channel[i].type==DBLA)
+			if(channel[i].type == DBLA)
 				channelType = DOUBLEARRAY;
 			else
 				channelType = FLOATVECTORYARRAY;
@@ -52,11 +52,11 @@ void writeXmlChannel(Channel *channel)
 
 void closeXmlFile()
 {
-	if(info.mayaXMLFile!=NULL)
+	if(info.mayaXMLFile != NULL)
     {
 		fflush(info.mayaXMLFile);
         fprintf(info.mayaXMLFile,"\t</Channels>\n</Autodesk_Cache_File>\n");
         fclose(info.mayaXMLFile);
 	}
-	isXmlFinalized=FALSE;
+	isXmlFinalized = FALSE;
 }

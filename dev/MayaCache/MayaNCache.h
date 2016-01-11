@@ -1,3 +1,12 @@
+#ifndef _BOOLEAN_H_INCLUDED
+#define _BOOLEAN_H_INCLUDED
+
+#define BOOL int
+#define TRUE 1
+#define FALSE 0
+
+#endif
+
 #ifndef MAYANCACHE_H_INCLUDED
 #define MAYANCACHE_H_INCLUDED
 
@@ -5,7 +14,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include <Boolean.h>
+
 
 
 // generic swap macro managing "endianess"
@@ -92,7 +101,6 @@ typedef struct channel
 	BOOL enabled;				// enable or disable channel
 	char *name;					// channel name
 	CHANNELVARIABLETYPE type;	// type of channel DBLA/FVCA
-	int numberOfElements;		// number of elements
 	int numberOfComponents;		// number of components per element (example position 3 components, mass 1 component)
 	double *elementsD;			// DBLA elements: double array; 
 	float *elementsF;			// FVCA elements: float triples' array  
@@ -123,7 +131,6 @@ typedef  struct Info
 	 int end;					// [tick]
 	 unsigned int mayaTPF;		// [seconds]
 	 int numberOfChannels;		// [int]
-	 int numberOfElements;		// [int]
 
 	 int startFrame;
 	 int currentFrame;
@@ -164,13 +171,14 @@ char *mayaCacheFileName;
 #ifdef __cplusplus
 extern "C" {
 #endif
+
 void DLL_EXPORT enableChannel(CHANNELTYPE channelActive, ENABLEDISABLED ea);
 
-void DLL_EXPORT init(char *particleSysName,char *fileName, CACHEFORMAT cacheFormat, int numberOfElements, unsigned int fps, double start, double end,char *extras[], int nExtras);
+void DLL_EXPORT init(char *particleSysName, char *fileName, CACHEFORMAT cacheFormat, unsigned int fps, double start, double end, char *extras[], int nExtras);
 
 void DLL_EXPORT assignChannelValues(CHANNELTYPE channelActive, void *sourceValues);
 
-void DLL_EXPORT mayaCache();
+void DLL_EXPORT mayaCache(int numberOfElements);
 
 void DLL_EXPORT closeMayaNCacheFile();
 

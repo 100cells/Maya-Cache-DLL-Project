@@ -12,17 +12,16 @@
  void makeName(CHANNELTYPE type, char **channelName);
  BOOL fileExists(const char * filename);
  void writeMayaNCacheHeader();
- void writeMayaNCacheChannel(CHANNELTYPE cType);
- void writeMayaNCacheBlock();
+ void writeMayaNCacheChannel(CHANNELTYPE cType, int numberOfElements);
+ void writeMayaNCacheBlock(int numberOfElements);
 
  void enableChannel(CHANNELTYPE channelActive, ENABLEDISABLED ea)
  {
-	 mayaChannels[channelActive].enabled=ea;
-	 mayaChannels[channelActive].elementsD=NULL;
-	 mayaChannels[channelActive].elementsF=NULL;
-	 if (ea==ENABLED)
+	 mayaChannels[channelActive].enabled = ea;
+	 mayaChannels[channelActive].elementsD = NULL;
+	 mayaChannels[channelActive].elementsF = NULL;
+	 if (ea == ENABLED)
 	 {
-		mayaChannels[channelActive].numberOfElements=info.numberOfElements;
 		// assigning name
 		makeName(channelActive, &mayaChannels[channelActive].name);
 		switch(channelActive) 
@@ -59,14 +58,17 @@
 	 {
 
 		info.numberOfChannels--;
-		mayaChannels[channelActive].numberOfElements=0;
 		mayaChannels[channelActive].numberOfComponents = 0;
-		mayaChannels[channelActive].type=FVCA;
-		free(mayaChannels[channelActive].elementsD);
-		free(mayaChannels[channelActive].elementsF);
-		free(mayaChannels[channelActive].name);
-		mayaChannels[channelActive].elementsD=NULL;
-		mayaChannels[channelActive].elementsF=NULL;
+		mayaChannels[channelActive].type = FVCA;
+		if(mayaChannels[channelActive].elementsD != NULL)
+			free(mayaChannels[channelActive].elementsD);
+		if (mayaChannels[channelActive].elementsF != NULL)
+			free(mayaChannels[channelActive].elementsF);
+		if (mayaChannels[channelActive].name != NULL)
+			free(mayaChannels[channelActive].name);
+		mayaChannels[channelActive].elementsD = NULL;
+		mayaChannels[channelActive].elementsF = NULL;
+		mayaChannels[channelActive].name = NULL;
 	 }
 }
 
@@ -74,85 +76,85 @@
  {
 	if (mayaChannels[channelActive].type == FVCA)
 	{
-		mayaChannels[channelActive].elementsF=(float *)sourceValues;
-		mayaChannels[channelActive].elementsD=NULL;
+		mayaChannels[channelActive].elementsF = (float *)sourceValues;
+		mayaChannels[channelActive].elementsD = NULL;
 	}
 	else
 	{
-		mayaChannels[channelActive].elementsD=(double*)sourceValues;
-		mayaChannels[channelActive].elementsF=NULL;
+		mayaChannels[channelActive].elementsD = (double*)sourceValues;
+		mayaChannels[channelActive].elementsF = NULL;
 	}
  }
  
- void init(char *particleSysName,char *fileName, CACHEFORMAT cacheFormat,int numberOfElements, unsigned int fps, double start, double end,char *extra[], int nE)
+ void init(char *particleSysName, char *fileName, CACHEFORMAT cacheFormat, unsigned int fps, double start, double end, char *extra[], int nE)
  {
-	char *mcName, *xmlName;
-	int i=0;
-	int padding=1,temp=0;
-	temp=(int)(end-start)*fps;
+	 char *mcName;
+	int i = 0;
+	int padding = 1, temp = 0;
+	temp = (int) ( ( end - start ) * fps );
 
-	info.extras=(char**)malloc(nE*sizeof(char*));
-	info.nExtras=nE;
-	for (i=0;i<nE;i++)
+	info.extras = (char**)malloc(nE*sizeof(char*));
+	info.nExtras = nE;
+	for (i = 0; i < nE; i++)
 	{	
-		info.extras[i]=(char*)malloc(sizeof(char)*strlen(extra[i]));
-		strcpy(info.extras[i],extra[i]);
+		info.extras[i] = (char*)malloc( sizeof(char) * strlen(extra[i]) );
+		strcpy(info.extras[i], extra[i]);
 	}
 
-	info.numberOfChannels=0;
-	info.particleSysName=particleSysName;
-	info.numberOfElements=numberOfElements;
+	info.numberOfChannels = 0;
+	info.particleSysName = (char *)malloc( sizeof(char) * strlen(particleSysName) );
+	strcpy(info.particleSysName, particleSysName);
 
-	info.startFrame=(int)floor(start*fps);			//computing starting frame
-	info.currentFrame=info.startFrame;
-	info.frameIncrement=1;
+	info.startFrame = (int) floor( start * fps );			//computing starting frame
+	info.currentFrame = info.startFrame;
+	info.frameIncrement = 1;
 
-	for(i=0;i<CACHENUMBEROFCHANNELS;i++)
-		mayaChannels[i].enabled=DISABLED;
+	for(i = 0; i < CACHENUMBEROFCHANNELS; i++)
+		mayaChannels[i].enabled = DISABLED;
 
 	while (temp/10>1)
 	{
 		padding++;
-		temp=temp/10;
+		temp = temp/10;
 	}
 
 	// adding extension ".mc"
-	mcName = (char*)malloc(sizeof(char)*(strlen(fileName)+padding+4));
+	mcName = (char*) malloc( sizeof(char) * ( strlen(fileName) + padding + 4 ) );
 	strcpy(mcName, fileName);
 	strcat(mcName, ".mc");
-	info.mcFileName=mcName;
-	
-	mayaCacheFileName=(char*)malloc(sizeof(char)*(strlen(fileName)));
+	info.mcFileName = (char *) malloc( sizeof(char) * ( strlen(fileName) + 3 ) );
+	strcpy(info.mcFileName, mcName);
+
+	mayaCacheFileName = (char*)malloc(sizeof(char)*(strlen(fileName)));
 	strcpy(mayaCacheFileName, fileName);
-	
-	printf("Enabling %s in write mode\n",info.mcFileName);
-	
+
+	printf("Enabling %s in write mode\n", info.mcFileName);
+
 	// adding extension ".xml"
-	xmlName = (char*)malloc(sizeof(char)*(strlen(fileName)+5));
-	strcpy(xmlName, fileName);
-	strcat(xmlName, ".xml");
-	info.xmlFileName=xmlName;
+	info.xmlFileName = (char*)malloc(sizeof(char) * (strlen(fileName) + 5));
+	strcpy(info.xmlFileName, fileName);
+	strcat(info.xmlFileName, ".xml");
 		
 	printf("Enabling %s in write mode \n",info.xmlFileName);
 
-	info.cacheFormat=cacheFormat;
-	info.fps=fps;												// [frame/sec]
-	info.duration=(int)(fps*(end-start));						// [frame]
-	info.mayaTPF=MAYATICK/fps;									// [mayaticks/frame]
-	info.start=(int)floor(start*fps)*info.mayaTPF;				// [mayaticks]
-	info.end=info.duration*info.mayaTPF+info.start;				// [mayaticks]			
+	info.cacheFormat = cacheFormat;
+	info.fps = fps;															// [frame/sec]
+	info.duration = (int) ( fps * ( end - start ) );						// [frame]
+	info.mayaTPF = (int) MAYATICK / fps;									// [mayaticks/frame]
+	info.start = (int) ( floor( start * fps ) * info.mayaTPF );				// [mayaticks]
+	info.end = info.duration * info.mayaTPF + info.start;						// [mayaticks]			
 		
-	if (info.cacheFormat==ONEFILE)
+	if (info.cacheFormat == ONEFILE)
 	{
-		info.mayaMCFile=fopen(info.mcFileName, "wb");
+		info.mayaMCFile = fopen(info.mcFileName, "wb");
 		writeMayaNCacheHeader();
 	}	
-	isXmlFinalized=FALSE;
+	isXmlFinalized = FALSE;
  }
 
 void closeMayaNCacheFile()
 {
-    if(info.mayaMCFile!=NULL)
+    if(info.mayaMCFile != NULL)
 	{
 		fflush(info.mayaMCFile);
         fclose(info.mayaMCFile);
@@ -168,15 +170,15 @@ void writeMayaNCacheHeader()
 {
 	Header header;
 	int startTime,endTime;
-	startTime=0;
-	endTime=1;
+	startTime = 0;
+	endTime = 1;
 
-	if(info.mayaMCFile==NULL)
+	if(info.mayaMCFile == NULL)
 		printf("Unable to open %s file in write mode\n",info.mcFileName);
 	else
 	{
 
-		info.mayaMCFile=fopen(info.mcFileName, "wb");
+		info.mayaMCFile = fopen(info.mcFileName, "wb");
 		setvbuf(info.mayaMCFile, info.mcChannelBuffer, _IOFBF, BUFFERLENGTH);
 		memcpy(header.format, FOR4, sizeof(header.format));
 		header.length = swapint(40);
@@ -187,7 +189,7 @@ void writeMayaNCacheHeader()
 		memcpy(header.etim, ETIM, sizeof(header.etim));
 		header.stimFirstPart = swapint(4);
 		header.etimFirstPart = swapint(4);
-		if (info.cacheFormat==ONEFILE)
+		if (info.cacheFormat == ONEFILE)
 		{
 			header.stimSecondPart = swapint(startTime);	
 			header.etimSecondPart = swapint(endTime);
@@ -202,7 +204,7 @@ void writeMayaNCacheHeader()
 }
 
 // channel
-void writeMayaNCacheChannel(CHANNELTYPE cType)
+void writeMayaNCacheChannel(CHANNELTYPE cType, int numberOfElements)
 {
 	unsigned int  dim, swappedDim, padding, size, nElements, i, channelArrayLength, dataTypeSize, arrayElements, temp, four;
 	long long int channelLenght=0, tempLong;
@@ -215,15 +217,15 @@ void writeMayaNCacheChannel(CHANNELTYPE cType)
 	padding = 4 - dim%4;
 	swappedDim = swapint(dim+1);
 	four = swapint(4);
-	size = swapint(mayaChannels[cType].numberOfElements);
+	size = swapint(numberOfElements);
 	
-	if(mayaChannels[cType].type==FVCA)
+	if(mayaChannels[cType].type == FVCA)
 	{
 		pFloat = mayaChannels[cType].elementsF;
-		channelArrayLength = 3 * 4 * mayaChannels[cType].numberOfElements;
+		channelArrayLength = 3 * 4 * numberOfElements;
 		strncpy(type, FVCACHANNEL, 4);
 		dataTypeSize = 4;
-		arrayElements = 3 * mayaChannels[cType].numberOfElements;
+		arrayElements = 3 * numberOfElements;
 	}
 	else
 	{
@@ -239,7 +241,7 @@ void writeMayaNCacheChannel(CHANNELTYPE cType)
 		}
 		else
 		{
-			arrayElements = mayaChannels[cType].numberOfElements;
+			arrayElements = numberOfElements;
 			channelArrayLength = 8 * arrayElements;
 		}
 	}
@@ -261,9 +263,9 @@ void writeMayaNCacheChannel(CHANNELTYPE cType)
 	for(i=0; i<arrayElements; i++)
 	{
 		//swap type + write
-		if(mayaChannels[cType].type==FVCA)
+		if(mayaChannels[cType].type == FVCA)
 		{
-			temp=swapfloat(pFloat[i]);
+			temp = swapfloat(pFloat[i]);
 			fwrite(&temp, sizeof(int), 1, info.mayaMCFile);
 		}
 		else
@@ -276,7 +278,7 @@ void writeMayaNCacheChannel(CHANNELTYPE cType)
 }
 
 // data block
-void writeMayaNCacheBlock()
+void writeMayaNCacheBlock(int numberOfElements)
 {
 	// single data block writing, 
 	// each Block start with "FOR4"
@@ -287,31 +289,31 @@ void writeMayaNCacheBlock()
 	unsigned int time, dimB, timeVar, nChannels=0, dataLength=0, dataSize=0;
 	int padding,i;
 	timeVar = swapint(4);
-	time = swapint(info.currentFrame*MAYATICK/info.fps);
-	fwrite(FOR4, 4*sizeof(char), 1, info.mayaMCFile);
+	time = swapint(info.currentFrame * MAYATICK / info.fps);
+	fwrite(FOR4, 4 * sizeof(char), 1, info.mayaMCFile);
 
 	// computing the block length
-	for(i=0;i<CACHENUMBEROFCHANNELS;i++)
+	for(i = 0; i < CACHENUMBEROFCHANNELS; i++)
 	{
-		int size=0;
+		int size = 0;
 		dataSize = 0;
 		if (mayaChannels[i].enabled)
 		{
-			padding=4-strlen(mayaChannels[i].name)%4;
+			padding = 4-strlen(mayaChannels[i].name)%4;
 			dataLength += (unsigned int)strlen(mayaChannels[i].name) + padding;
-			if(mayaChannels[i].type==FVCA)
-				dataSize = 3 * 4 * mayaChannels[i].numberOfElements;
+			if (mayaChannels[i].type == FVCA)
+				dataSize = 3 * 4 * numberOfElements;
 			else
-				if (i==COUNTCHANNEL)
+				if (i == COUNTCHANNEL)
 					dataSize = 8;
 				else
-					dataSize = 8* mayaChannels[i].numberOfElements;
+					dataSize = 8 * numberOfElements;
 			
 			dataLength += dataSize;
 		}
 	}
 	
-	if (info.cacheFormat==ONEFILE)
+	if (info.cacheFormat == ONEFILE)
 		dimB = SINGLEFILEBLOCKFIXEDDIM + CHANNELFIXEDDIM * info.numberOfChannels + dataLength;	
 	else
 		dimB = MULTIFILEBLOCKFIXEDDIM + CHANNELFIXEDDIM * info.numberOfChannels + dataLength;	
@@ -319,46 +321,46 @@ void writeMayaNCacheBlock()
 	dimB = swapint(dimB);
 	fwrite(&dimB, sizeof(unsigned int), 1, info.mayaMCFile);
 	fwrite(MYCH, 4*sizeof(char), 1, info.mayaMCFile);
-	if (info.cacheFormat==ONEFILE)
+	if (info.cacheFormat == ONEFILE)
 	{
 		fwrite(TIME, 4*sizeof(char), 1, info.mayaMCFile);
 		fwrite(&timeVar, sizeof(int), 1, info.mayaMCFile);
 		fwrite(&time, sizeof(int), 1, info.mayaMCFile);
 	}
 
-	for(i=0;i<CACHENUMBEROFCHANNELS;i++)
+	for(i = 0; i < CACHENUMBEROFCHANNELS; i++)
 		if (mayaChannels[i].enabled)
-			writeMayaNCacheChannel(i);
+			writeMayaNCacheChannel(i, numberOfElements);
 		
 	fflush(info.mayaMCFile);
-	if(isXmlFinalized==FALSE)
+	if(isXmlFinalized == FALSE)
 	{
 		printXml(mayaChannels);
 		closeXmlFile();
-		isXmlFinalized=TRUE;
+		isXmlFinalized = TRUE;
 	}
 }
 
 // entry point for saving data in maya cache file format (support "one file per frame" and "one file" options)
-void mayaCache()
+void mayaCache(int numberOfElements)
 {
 	char *mcName;
 	char *subfix;
 	int sflenght,fps;
 
-	if (info.cacheFormat==ONEFILE)
-		writeMayaNCacheBlock();
+	if (info.cacheFormat == ONEFILE)
+		writeMayaNCacheBlock(numberOfElements);
 	else
 	{
-	    fps=info.currentFrame;
-		sflenght=1;
-		while (fps>1)
+	    fps = info.currentFrame;
+		sflenght = 1;
+		while (fps > 1)
 		{
 			sflenght++;
-			fps=fps/10;
+			fps = fps/10;
 		}
-		subfix = (char*)malloc(sizeof(char)*(strlen(mayaCacheFileName)+sflenght));
-		itoa(info.currentFrame,subfix,10);
+		subfix = (char*)malloc(sizeof(char) * ( strlen(mayaCacheFileName) + sflenght ) );
+		_itoa(info.currentFrame, subfix, 10);
 		
 		// adding extension ".mc"
 		// "Frame"---->5
@@ -367,22 +369,20 @@ void mayaCache()
 		strcat(mcName, "Frame");
 		strcat(mcName, subfix);
 		strcat(mcName, ".mc");
-		if (info.mcFileName!=NULL)
-			free(info.mcFileName);
-		info.mcFileName=mcName;
-		info.mayaMCFile=fopen(info.mcFileName, "wb");
+		info.mcFileName = mcName;
+		info.mayaMCFile = fopen(info.mcFileName, "wb");
 		
 		writeMayaNCacheHeader();
 			setvbuf(info.mayaMCFile, info.mcChannelBuffer, _IOFBF, BUFFERLENGTH);
 
-		writeMayaNCacheBlock();
-		if(info.mayaMCFile!=NULL)
+		writeMayaNCacheBlock(numberOfElements);
+		if(info.mayaMCFile != NULL)
 			closeMayaNCacheFile();
 		else
 			printf("Maya NCache file '%s' not saved!\n", info.mcFileName);
 	}
 
-	info.currentFrame+=info.frameIncrement;
+	info.currentFrame += info.frameIncrement;
 }
 
 void makeName(CHANNELTYPE type, char **channelName)
@@ -392,60 +392,50 @@ void makeName(CHANNELTYPE type, char **channelName)
 	switch(type)
 	{
 		case IDCHANNEL:
-			dim=4;
-			break;
-		case COUNTCHANNEL:
-			dim=7;
-			break;
-		case BIRTHTIMECHANNEL:
-			dim=11;
-			break;
-		case POSITIONCHANNEL:
-			dim=10;
-			break;
-		case LIFESPANPPCHANNEL:
-			dim=12;
-			break;
-		case FINALLIFESPANPPCHANNEL:
-			dim=17;
-			break;
-		case VELOCITYCHANNEL:
-			dim=10;
-			break;
-		case ACCELERATIONCHANNEL:
-			dim=14;
-			break;
-		case WORLDPOSITIONCHANNEL:
-			dim=15;
-			break;
-		case WORLDVELOCITYCHANNEL:
-			dim=15;
-			break;
-		case WORLDVELOCITYINOBJECTSPACECHANNEL:
-			dim=28;
-			break;
-		case MASSCHANNEL:
-			dim=6;
+			dim = 4;
 			break;
 		case AGECHANNEL:
-			dim=5;
+			dim = 5;
 			break;
+		case MASSCHANNEL:
+			dim = 6;
+			break;
+		case COUNTCHANNEL:
 		case RGBPPCHANNEL:
-			dim=7;
+			dim = 7;
 			break;
-		case OPACITYPPCHANNEL:
-			dim=11;
-			break;
+		case POSITIONCHANNEL:
+		case VELOCITYCHANNEL:
 		case RADIUSPPCHANNEL:
-			dim=10;
+			dim = 10;
 			break;
-
+		case BIRTHTIMECHANNEL:
+		case OPACITYPPCHANNEL:
+			dim = 11;
+			break;
+		case LIFESPANPPCHANNEL:
+			dim = 12;
+			break;
+		case ACCELERATIONCHANNEL:
+			dim = 14;
+			break;
+		case WORLDPOSITIONCHANNEL:
+		case WORLDVELOCITYCHANNEL:
+			dim = 15;
+			break;
+		case FINALLIFESPANPPCHANNEL:
+			dim = 17;
+			break;
+		case WORLDVELOCITYINOBJECTSPACECHANNEL:
+			dim = 28;
+			break;
+		
 		default:
 			printf("Option not allowed yet.\n Exit from program.\n Press a key to exit");
 			getchar();
 			break;
 	}
-	*channelName=(char*)calloc(sizeof(info.particleSysName)+dim, sizeof(char));
+	*channelName = (char*)calloc(strlen(info.particleSysName) + dim, sizeof(char));
 	strcpy(channelName[0], info.particleSysName);
 	strcat(channelName[0], underscore);
 	strcat(channelName[0], names[type]);

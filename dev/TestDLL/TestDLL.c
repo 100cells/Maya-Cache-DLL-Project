@@ -16,34 +16,37 @@ int main()
 	double  *id, *birthtime,*lifespanPP,*finalLifespanPP;
 	float *position,*velocity,*color;
 	double count,start,end;
-	unsigned long numberOfElements=2;
-	float r1,r2,angle1,angle2,delta;
+	//unsigned long numberOfElements=3;
+	float r1,r2,r3,angle1,angle2,delta;
 	int j,nExtras;
 	unsigned int fps;
 	CACHEFORMAT cachingMethod;
 	char *extras[4];	// extra parameters list
+	
 	nExtras=4;			// numer of extra parameters
 
 	fps=24;			// frame per seconds
 	start=0;		// start at time "0"
-	end=2;			// simulation lenght "2" (in seconds) 
-	r1=5;			// first particle rotation radius
-	r2=7;			// second particle rotation radius
+	end=10;			// simulation lenght "2" (in seconds) 
+	r1 = 5;			// first particle rotation radius
+	r2 = 7;			// second particle rotation radius
+	r3 = 3;
 	angle1=0;		// first particle starting angle
 	angle2=90;		// second particle starting angle
 
 	// Extra information for the cached simulation; 
 	// info will be displayed in the Cache Description section 
 	// of the cacheFile node.
-	extras[0]="saving path";						// path to maya file where simulation was done
-	extras[1]="maya 2011 x64";						// maya version
-	extras[2]="100cells";							// owner
-	extras[3]="NCache Info for nParticleShape1";	// 
+	extras[0] = "saving path";						// path to maya file where simulation was done
+	extras[1] = "maya 2011 x64";						// maya version
+	extras[2] = "100cells";							// owner
+	extras[3] = "NCache Info for nParticleShape2";	// 
 
 	// Initializing channels options, simulation parameters and saving method type
-	cachingMethod=ONEFILEPERFRAME; //ONEFILE; 
-	init("nParticleShape1","c://temp//NPARTICLESHAPE1",cachingMethod,numberOfElements,fps,start,end,extras,nExtras);
-
+	cachingMethod = ONEFILEPERFRAME;
+	//cachingMethod = ONEFILE; 
+	
+	init("nParticleShape1","c://temp//NPARTICLESHAPE1",cachingMethod,fps,start,end,extras,nExtras);
 	enableChannel(IDCHANNEL, ENABLED);
 	enableChannel(COUNTCHANNEL, ENABLED);
 	enableChannel(BIRTHTIMECHANNEL, ENABLED);
@@ -52,13 +55,18 @@ int main()
 	enableChannel(FINALLIFESPANPPCHANNEL, ENABLED);
 	enableChannel(VELOCITYCHANNEL, ENABLED);
 	enableChannel(RGBPPCHANNEL, ENABLED);
-
+		
 	// simulation data
 	delta=(float)((360.0/getDuration()));
 
 	// for the entire simulation's length
 	for(j=getStartFrame();j<=getStartFrame()+getDuration();j+=getFrameIncrement())
 	{
+		
+		unsigned long numberOfElements = 2;
+		if (j > 96 && j< 192)
+			numberOfElements = 3;
+		
 		color=(float*)malloc(3 * numberOfElements * sizeof(float));
 		position=(float*)malloc(3 * numberOfElements * sizeof(float));
 		velocity=(float*)malloc(3 * numberOfElements * sizeof(float));
@@ -68,16 +76,20 @@ int main()
 		lifespanPP = (double*)calloc(3*numberOfElements, sizeof(double));
 		finalLifespanPP = (double*)calloc(3*numberOfElements, sizeof(double));
 
+		float sv1 = (float) sin(3.14*angle1 / 180.0);
+		float cv1 = (float) cos(3.14*angle1 / 180.0);
+		float sv2 = (float)sin(3.14*angle2 / 180.0);
+		float cv2 = (float)cos(3.14*angle2 / 180.0);
 		// for each particle in the particle system 
 		// compute the position and save the datas
 		// position, velocity, color and id for the first particle (x axis)
 		id[0]=0;
-		position[0]=0;
-		position[1]=(float)(r1*sin(3.14*angle1/180.0));
-		position[2]=(float)(r1*cos(3.14*angle1/180.0));
-		velocity[0]=0;
-		velocity[1]=(float)(r1*3.14/180.0*cos(3.14*angle1/180.0));
-		velocity[2]=(float)(-r1*3.14/180.0*sin(3.14*angle1/180.0));
+		position[0] = 0;
+		position[1] = r1 * sv1;
+		position[2] = r1 * cv1;
+		velocity[0] = 0;
+		velocity[1] = (float) (r1 * 3.14 / 180.0 * cv1);
+		velocity[2] = (float) (-r1 * 3.14 / 180.0 * sv1);
 		// red color
 		color[0]=1.0;
 		color[1]=0.0;
@@ -85,19 +97,35 @@ int main()
 
 		// position, velocity and id for the second particle (y axis)
 		id[1]=1;
-		position[3]=(float)(r2*cos(3.14*angle2/180.0));
-		position[4]=0;
-		position[5]=(float)(r2*sin(3.14*angle2/180.0));
-		velocity[3]=(float)(r2*3.14/180.0*sin(3.14*angle2/180.0));
-		velocity[4]=0;
-		velocity[5]=(float)(-r2*3.14/180.0*cos(3.14*angle2/180.0));
+		position[3] = r2 * cv2;
+		position[4] = 0;
+		position[5] = r2 * sv2;
+		velocity[3] = (float) ( r2 * 3.14 / 180.0 * sv2);
+		velocity[4] = 0;
+		velocity[5] = (float) ( -r2 * 3.14 / 180.0 * cv2);
 		// cyan color
 		color[3]=0.0;
 		color[4]=1.0;
 		color[5]=1.0;
-		angle1+=delta;
-		angle2-=delta;
-
+		
+		if (j > 96 && j< 192)
+		{
+			// position, velocity and id for the third particle (y axis)
+			id[2] = 2;
+			position[6] = r3 * cv1;
+			position[7] = 0;
+			position[8] = r3 * sv1;
+			velocity[6] = (float)(r3 * 3.14 / 180.0 * sv1);
+			velocity[7] = 0;
+			velocity[8] = (float)(-r3 * 3.14 / 180.0 * cv1);
+			// cyan color
+			color[6] = 0.0;
+			color[7] = 1.0;
+			color[8] = 0.0;
+		}
+		
+		angle1 += delta;
+		angle2 -= delta;
 		// i don't need to compute the birthtime because the particles are already presents at time 0
 		// and the "calloc" fill the memory area with zeros. Same appends to lifespanPP and finalLifeSpanPP
 
@@ -111,7 +139,7 @@ int main()
 		assignChannelValues(RGBPPCHANNEL,color);
 
 		// chaching simulation
-		mayaCache();
+		mayaCache(numberOfElements);
 
 		// free resources
 		if(id!=NULL)
@@ -126,6 +154,8 @@ int main()
 			free(lifespanPP);
 		if(finalLifespanPP!=NULL)
 			free(finalLifespanPP);
+		if (color != NULL)
+			free(color);
 	}
 
 	// close the maya ncache file and exit
