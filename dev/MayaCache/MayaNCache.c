@@ -34,6 +34,7 @@
 			case OPACITYPPCHANNEL:
 			case RADIUSPPCHANNEL:
 			case FINALLIFESPANPPCHANNEL:
+			case LIFESPANPPCHANNEL:
 				mayaChannels[channelActive].type = DBLA;
 				mayaChannels[channelActive].numberOfComponents = 1;
 				break;
@@ -46,10 +47,6 @@
 			case WORLDVELOCITYINOBJECTSPACECHANNEL:
 				mayaChannels[channelActive].numberOfComponents = 3;
 				mayaChannels[channelActive].type=FVCA;
-				break;
-			case LIFESPANPPCHANNEL:
-				mayaChannels[channelActive].numberOfComponents = 3;
-				mayaChannels[channelActive].type = DBLA;
 				break;
 		};
 		info.numberOfChannels++;
@@ -74,21 +71,17 @@
 
  void assignChannelValues(CHANNELTYPE channelActive, void *sourceValues)
  {
+	mayaChannels[channelActive].elementsF = NULL;
+	mayaChannels[channelActive].elementsD = NULL;
 	if (mayaChannels[channelActive].type == FVCA)
-	{
 		mayaChannels[channelActive].elementsF = (float *)sourceValues;
-		mayaChannels[channelActive].elementsD = NULL;
-	}
 	else
-	{
 		mayaChannels[channelActive].elementsD = (double*)sourceValues;
-		mayaChannels[channelActive].elementsF = NULL;
-	}
  }
  
  void init(char *particleSysName, char *fileName, CACHEFORMAT cacheFormat, unsigned int fps, double start, double end, char *extra[], int nE)
  {
-	 char *mcName;
+	char *mcName;
 	int i = 0;
 	int padding = 1, temp = 0;
 	temp = (int) ( ( end - start ) * fps );

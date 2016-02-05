@@ -27,7 +27,7 @@ int main()
 
 	fps=24;			// frame per seconds
 	start=0;		// start at time "0"
-	end=10;			// simulation lenght "2" (in seconds) 
+	end=18;			// simulation lenght "2" (in seconds) 
 	r1 = 5;			// first particle rotation radius
 	r2 = 7;			// second particle rotation radius
 	r3 = 3;
@@ -43,10 +43,10 @@ int main()
 	extras[3] = "NCache Info for nParticleShape2";	// 
 
 	// Initializing channels options, simulation parameters and saving method type
-	cachingMethod = ONEFILEPERFRAME;
-	//cachingMethod = ONEFILE; 
+	//cachingMethod = ONEFILEPERFRAME;
+	cachingMethod = ONEFILE; 
 	
-	init("nParticleShape1","c://temp//NPARTICLESHAPE1",cachingMethod,fps,start,end,extras,nExtras);
+	init("nParticleShape1","D://temp//test dll//cache1//ONEFILE",cachingMethod,fps,start,end,extras,nExtras);
 	enableChannel(IDCHANNEL, ENABLED);
 	enableChannel(COUNTCHANNEL, ENABLED);
 	enableChannel(BIRTHTIMECHANNEL, ENABLED);
@@ -73,8 +73,10 @@ int main()
 		id=(double*)malloc( numberOfElements * sizeof(double));
 		count=numberOfElements;
 		birthtime = (double*)calloc(numberOfElements, sizeof(double));
-		lifespanPP = (double*)calloc(3*numberOfElements, sizeof(double));
-		finalLifespanPP = (double*)calloc(3*numberOfElements, sizeof(double));
+		lifespanPP = (double*)calloc(numberOfElements, sizeof(double));
+		finalLifespanPP = (double*)calloc(numberOfElements, sizeof(double));
+
+		
 
 		float sv1 = (float) sin(3.14*angle1 / 180.0);
 		float cv1 = (float) cos(3.14*angle1 / 180.0);
